@@ -55,11 +55,11 @@ or other related languages, this can be used in other statements. Here are some 
 
 `squareNumber(squareNumber(2));`
 		
-Basic Flow-Control Logic Statements:
-------------------------------------
+### Basic Flow-Control Logic Statements:
 Splice features the same basic flow-control logic statements as C, C++, C#, and Java. An example of each will be
 shown in the following, as well as an explanation:
--The `if()` statement:
+
+* The `if()` statement:
 The `if()` statement is the most simple statement of the following. It is used to compare values. The basic
 syntax is this:
 
