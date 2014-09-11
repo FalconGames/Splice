@@ -87,3 +87,69 @@ if (i == 25) {
 	print("i is not equal to 25 or 100");
 }
 ```
+
+New Syntax:
+-----------
+
+### Nodes:
+Nodes are the largest feature added in Splice. While they pose no real advantage over functions and methods in other languages,
+they do have some interesting properties that help in certain cases, such as multi-threading, which is much easier using the
+freeze and melt syntax in combination with node forking and joining. Another feature is the resolution to an object once a node
+has completed, which allows for the preservation of all results of a function very easily. Nodes are partially inspired by the
+pipe operator in UNIX shells.
+
+### Modules:
+Modules are a way of grouping your code together to maximize compatibility on different systems. Modules are selected from a
+master record of all available modules. Modules with the same name are resolved to the one with the highest presedence, unless
+the `#prec <module>/<identifier> <number>` preprocessor directive or command line arguments are used to overwrite the default
+precedence. Modules also allow for multiple versions to be installed on the system, with the newest selected by default and
+others available through version selection while including the module.
+
+### Freezing/Melting:
+Of all of the features added, these are the simplest. Essentially, freezing (`expr ice = {{doLongProcess()}};`) allows
+the use of expression variables that store an expression that hasn't been run yet. Melting (`[[ice]];`), or running the frozen
+expression, allows for you to release the previous expression and run it at the correct time.
+
+
+### Soup:
+The final major feature added in Splice is the soup type. The soup type is an optionally-indexed, variable-length, dynamically-
+typed heap, that is used to store large collections of arbitrary data. The soup type can also be extended by "ignores", which
+can be used to limit what types it may or may not hold, and other features that allow for it to take the shape of any data
+container needed with relative ease. The basic format for a soup variable is the following:
+
+`soup <name> = ~[]~;`
+
+The brackets can be used for options and can have data entered to them. Below is an example of an int dictionary with a size
+limit of 20:
+
+`soup intDict20 = ~[ignore {* ? !pair(string, int)}, index {string index, int value}, limit {20}]~;`
+
+Data can be added to a soup like so:
+
+`<someData> ~> <someSoup>;`
+
+For example, when adding to the previously created soup, one would use:
+
+`{'x', 5} ~> intDict20;`
+
+If the soup rejects the data, it can be forwarded like so:
+
+`{'x', 5} ~> intDict20 !~> (soup waste = ~[]~);`
+
+Soups can also be used to buffer. When a space opens, they can get passed on further. Here is an example:
+
+```
+soup topPosts = ~[ignore {* ? !Post}, limit {5}]~; // Create a soup of the top 5 posts
+soup posts = ~[ignore {* ? !Post}]~; // Create a buffer of posts
+
+when({{requests => isPost}}, {{$_.post ~> posts >> topPosts}}); // Use when to listen for new posts and add them. >> is buffer.
+```
+
+One final use of soup is as an anonymous object. Here is an example:
+
+```
+soup anon = ~[index {obj}]~;
+{'x', 0} ~> anon;
+{'y', 0} ~> anon;
+{'z', 0} ~> anon;
+```
