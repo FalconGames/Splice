@@ -98,6 +98,35 @@ freeze and melt syntax in combination with node forking and joining. Another fea
 has completed, which allows for the preservation of all results of a function very easily. Nodes are partially inspired by the
 pipe operator in UNIX shells.
 
+Nodes are defined like so:
+
+```C#
+node <name> {
+	=>[<in>];
+	<=[<out>];
+	
+	// Main code
+	
+	return [<out>];
+}
+```
+
+For example: here is a comparison of a standard C-style fucntion definition and a Splice node definition:
+
+C function                  | Splice node
+----------------------------|----------------------
+`int squareNumber(int n) {` | `node squareNumber {`
+	`return n*n;`			| `	=>[int n];`
+`}`							| `	<=[int n];`
+							| `	return n*n;`
+							| `}`
+							
+Now for a comparison of calling each type:
+
+C function					| Splice node
+----------------------------|-----------------------------
+`int n = squareNumber(5);`	| `int n = 5 => squareNumber;`
+
 ### Modules:
 Modules are a way of grouping your code together to maximize compatibility on different systems. Modules are selected from a
 master record of all available modules. All code can optionally be declared in modules. While not required in any way, modules
