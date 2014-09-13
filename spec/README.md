@@ -105,6 +105,42 @@ the `#prec <module>/<identifier> <number>` preprocessor directive or command lin
 precedence. Modules also allow for multiple versions to be installed on the system, with the newest selected by default and
 others available through version selection while including the module.
 
+All code can optionally be declared in modules. While not required in any way, modules help organize code. While modules can
+only encapsulate code, other files can be included to modules as well. The following is an example of the basic syntax for
+declaring new modules:
+
+```
+module <name> {
+	// Code
+}
+```
+
+This is only the most basic version of modules. Modules can be declared with versions and can be declared to replace, or extend,
+other modules. Replacing makes it an alternative library, meaning that if it is either the only available option or if it is
+rated higher in the precedence options it will replace the other library (NOTE: this requires the module to have the same
+identifiers for functions, variables, nodes, and objects for them to be used in place of another compatible library). Extending
+merely adds new functions onto a basic library. Below is an example of this:
+
+```
+module math.ext [1.0.0] extend lang.math [stable] replace splicex.math [1.5.1] {
+	// Code
+}
+```
+
+To import a module to the project, you must first make sure it is either in the working directory as code, in the lib sub-
+directory compiled to a native library format, or in the /etc/.splice/lib/ (or OS equivalent). It is highly recommended that
+you distribute libraries by source, as this not only simplifies integration, but supports open-source software, and allows for
+the benefits of free software, such as the ability of the user to fix bugs and add new features into the library and greatly
+simplifies the debugging process. The following is the format for importing modules:
+
+`using module <moduleName>;`
+
+Some important things to note are: the `using module` statement includes the the module into the entire file if it is at the
+root scope, but stays within any module or other code unit (and shares to all other parts of that code unit); it only includes
+the highest precendence with its compatible extensions of the highest precedence (if the `!` operator is used before the module
+name, it forces the use of the official module (unless none is found) and if it is used after, it forces the use of the module
+without extensions (unless explicitly included)); and the version can be forced using the brackets afterwards (`[1.3.2]`).
+
 ### Freezing/Melting:
 Of all of the features added, these are the simplest. Essentially, freezing (`expr ice = {{doLongProcess()}};`) allows
 the use of expression variables that store an expression that hasn't been run yet. Melting (`[[ice]];`), or running the frozen
