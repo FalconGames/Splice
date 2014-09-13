@@ -31,7 +31,7 @@ Definition:
 `<return type> <name>(<arguments>[, <arguments]*) { [...] }`
 
 For example:
-```
+```C#
 int squareNumber(int num) {
 	return num * num;
 }
@@ -68,7 +68,7 @@ syntax is this:
 While other types of comparisons exist, this is the simplest format. Functions can also be tested, and certain
 statements can be implied (such as anything which resolves to a boolean bit). Here is an example:
 
-```
+```C#
 if (i == 25) {
 	print("i is equal to 25");
 }
@@ -78,7 +78,7 @@ In addition to this basic format, if statements can conditionally branch the pro
 This keyword is used for any other comparison that should occur if, and only if, the first did not occur. The
 else statement can both be used with its own block, and with a conjoined if statmement. Here is an example:
 
-```
+```C#
 if (i == 25) {
 	print("i is equal to 25");
 } else if (i == 100) {
@@ -100,14 +100,9 @@ pipe operator in UNIX shells.
 
 ### Modules:
 Modules are a way of grouping your code together to maximize compatibility on different systems. Modules are selected from a
-master record of all available modules. Modules with the same name are resolved to the one with the highest presedence, unless
-the `#prec <module>/<identifier> <number>` preprocessor directive or command line arguments are used to overwrite the default
-precedence. Modules also allow for multiple versions to be installed on the system, with the newest selected by default and
-others available through version selection while including the module.
-
-All code can optionally be declared in modules. While not required in any way, modules help organize code. While modules can
-only encapsulate code, other files can be included to modules as well. The following is an example of the basic syntax for
-declaring new modules:
+master record of all available modules. All code can optionally be declared in modules. While not required in any way, modules
+help organize code. While modules can only encapsulate code, other files can be included to modules as well. The following is
+an example of the basic syntax for declaring new modules:
 
 ```
 module <name> {
@@ -140,6 +135,21 @@ root scope, but stays within any module or other code unit (and shares to all ot
 the highest precendence with its compatible extensions of the highest precedence (if the `!` operator is used before the module
 name, it forces the use of the official module (unless none is found) and if it is used after, it forces the use of the module
 without extensions (unless explicitly included)); and the version can be forced using the brackets afterwards (`[1.3.2]`).
+
+Including additional files into a module does not follow a very specific set of rules, but certain practices are encouraged.
+It is recommended that all other files included be place in a directory hierarchy mimicking the module name (with dots used as
+a seperator between directories, much like the "/" on Unix systems and the "\" on DOS systems). For example, an image (`img.png`)
+that is part of the module `gui.icons` should be placed in the path `./gui/icons/img.png` (this can also be done with code, so
+it is often useful to distinguish between code and other files by using a separate base path (i.e. `./src/gui/icons/icon.spl`
+and `./res/img/gui/icons/icon.spl`). To include the actual item, declare the following within the module:
+
+```C#
+module gui.icons {
+	[includeFile(":res/img/gui/icons/img.png")];
+	/* The colon signifies that it should start at the working directory, or the parent of ./src */
+	[includeDir(":res/img/gui/icons/")];
+}
+```
 
 ### Freezing/Melting:
 Of all of the features added, these are the simplest. Essentially, freezing (`expr ice = {{doLongProcess()}};`) allows
@@ -174,7 +184,7 @@ If the soup rejects the data, it can be forwarded like so:
 
 Soups can also be used to buffer. When a space opens, they can get passed on further. Here is an example:
 
-```
+```C#
 soup topPosts = ~[ignore {* ? !Post}, limit {5}]~; // Create a soup of the top 5 posts
 soup posts = ~[ignore {* ? !Post}]~; // Create a buffer of posts
 
@@ -183,7 +193,7 @@ when({{requests => isPost}}, {{$_.post ~> posts >> topPosts}}); // Use when to l
 
 One final use of soup is as an anonymous object. Here is an example:
 
-```
+```C#
 soup anon = ~[index {obj}]~;
 {'x', 0} ~> anon;
 {'y', 0} ~> anon;
