@@ -9,7 +9,7 @@ namespace Splice
 	class Program
 	{
 		static void Main(string[] args)
-        {
+		{
 			string code =
 @"void main()
 {
