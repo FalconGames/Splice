@@ -1,0 +1,24 @@
+inc std :recent:
+#inc = include
+#std = standard library
+#:*: is the version selector
+#recent = most recent release of the library on the system
+
+inc math-ext :1.5.1:
+#1.5.1 = select version 1.5.1
+safe inc spl-math :1.3.2:
+#safe = select if the last line failed
+safe[
+	#safe block used as catch block; allows for more than one line
+	#acts as a single statement (when one fails the entire block
+	#fails with it).	
+
+	inc spl-mat :recent:
+	#include matrices library
+	inc spl-vec :recent:
+	#include vectors library
+	inc spl-unit-conversion :recent:
+	#include unit conversion library
+]
+safe print "Failed to import math packages"
+#print an error message if no suitable packages could be found
