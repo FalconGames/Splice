@@ -1,0 +1,27 @@
+.\" Man-page for splice
+.\" For support, open an issue at https://github.com/FalconGames/Splice
+.TH man 1 "27 September 2014" "0.0" "Splice man page"
+.SH NAME
+splice \- a reference compiler for the splice programming language
+.SH SYNOPSIS
+splice [--version] [--help] <command> <files>
+.SH DESCRIPTION
+Splice is a reference compiler for the experimental Splice programming language. The language 
+introduces a new programming paradigm, node-orientation. Other than that, Splice features an 
+intuitive module system and a C-derived syntax.
+.SH OPTIONS
+--version
+	Displays the version of Splice currently installed on the system.
+--help
+	Displays a help screen for using the compiler.
+.SH COMMANDS
+splice-asm(1)
+	Prints out the generated assembly code.
+splice-build(1)
+	Builds from the current directory using an automated build system.
+splice-compile(1)
+	Compiles all the given files.
+splice-init(1)
+	Sets up the current directory for the build system.
+.SH AUTHOR
+FalconGames
