@@ -1,5 +1,20 @@
-module test {
-	void main(){
-		print("Hello, world!");
+import [math-ext | spl-math | (spl-mat, spl-vec)] as Math
+
+module Test {
+	void main() {
+		Math.Vector[] vecs;
+		vecs ->= [0, 1, 2] => Math.CreateVector;
+		vecs ->= new Math.Vector([0, 1, 2]);
+		vecs ->= Math.CreateVector([0, 1, 2]);
+		
+		Math.Matrix[] mats;
+		mats ->= [vecs[0], vecs[1], vecs[2]] => Math.CreateMatrix;
+		mats ->= new Math.Matrix([vecs[0], vecs[1], vecs[2]]);
+		mats ->= Math.CreateMatrix([vecs[0], vecs[1], vecs[2]]);
+
+		if (vecs[0] == vecs[1] == vecs[2]) {
+			print(vecs.toString());
+			print(mats.toString());
+		}
 	}
 }
