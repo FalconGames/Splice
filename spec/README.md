@@ -91,6 +91,55 @@ if (i == 25) {
 New Syntax:
 -----------
 
+### Captures:
+Splice takes the idea of C++'s lambda captures and further expands it. A quick refresher of the C++ lambda syntax
+in case you don't know what I'm talking about:
+
+```C++
+int x = 5;
+auto squareLambda = [&x]() {
+	return x * x;
+}
+```
+
+The brackets in the expression signify captures. Since lambdas don't inherit the scope of their parent block,
+you must use captures to 'grab' things from the parent scope. In Splice, however, this mechanism can be employed
+outside of just lambdas. The capture can be added to any block declaration and can be excluded. When you add it in
+you are limiting the scope and only inheriting the items listed in the brackets. While this may seem counterintuitive, it keeps you from having to think about variable scope in lots of places. Consider the following:
+
+```C++
+class ScopeExample {
+public:
+	int x, y, z;	
+	
+	ScopeExample(int x, int y, int z) {
+		this->x = x;
+		this->y = y;
+		this->z = z;
+	}
+};
+```
+
+As you can see, the scope becomes ambiguous, so you must use the `this` pointer, which is often inconvenient to use and can be forgetten quite easily. Obviously there are ways around this: many programmers use the `m_` prefix to show that a variable is a member of an object. But then this creates
+an issue: rather than favoring the names that are accessed by things outside of the object, you are favoring the
+internals of it. Instead, this could be fixed with captures:
+
+```C++
+class ScopeExample {
+	int x, y, z;
+	
+	ScopeExample(int x, int y, int z) [x as _x, y as _y, z as _z] {
+		_x = x;
+		_y = y;
+		_z = z;
+	}
+};
+```
+
+As you can see, everything viewable externally is favored. But that can still be done by using `_` as a prefix for the constructor's parameters, right? Well, yes to some extent, but this method sort of falls apart when using named arguments.
+
+(This idea is based off of Jonathan Blow's *Ideas For A New Programming Language*. You can find part one [here](https://www.youtube.com/watch?v=TH9VCN6UkyQ) and part two [here](https://www.youtube.com/watch?v=5Nc68IdNKdg)).
+
 ### Nodes:
 Nodes are the largest feature added in Splice. While they pose no real advantage over functions and methods in other languages,
 they do have some interesting properties that help in certain cases, such as multi-threading, which is much easier using the
@@ -126,6 +175,138 @@ Now for a comparison of calling each type:
 C function					| Splice node
 ----------------------------|-----------------------------
 `int n = squareNumber(5);`	| `int n = 5 => squareNumber;`
+
+#### But *WHY* use nodes?
+
+It's easy to see that nodes are not suitable for everything. Nodes take more code to define and use, and
+they are a feature that new Splice programmers won't immediately get, so why introduce them?
+
+* Nodes are an alternative syntax to functions that are easier to visualize (an example of this will be shown later).
+* Nodes make more sense when planning a program's control flow.
+* Nodes keep code grouped better.
+* Nodes are a better way of managing concurrency.
+
+Hold on... let's look at that last point again:
+
+>Nodes are a better way of managing concurrecny.
+
+For this to make sense, I'll have to introduce some new concepts related to nodes and concurrency.
+
+* `<` - the fork operator, used to fork the current thread into another thread. It can be used like this:
+
+`Thread *nodeBThread = this.thread < => b; // Fork into b, then continue this code path`
+
+* `>` - the join/merge operator (more about this will be explained later)
+
+`nodeBThread > => this.thread;`
+
+* `handle` - Handles 'messages' from other threads (similar to events.) The join operator calls the `MERGE` handler.
+
+* `inform` - Send a message to another thread.
+
+* `try inform` - Only inform the thread if it is not already busy handling the event specified.
+
+Here is a complete example:
+
+```C++
+void main() {
+	game; // Run the game node
+}
+
+node game {
+	=>[];
+	<=[];
+
+	// Exclamation shows pointer ownership
+	Sound *!sfx = loadSound("../res/sounds/sfx_clip.ogg");
+	int volume = 100;
+	Thread *soundPlayer = this.thread < => playsound;
+
+	bool running = true;
+
+	void run() {
+		while (running) {
+			try inform soundPlayer PLAY; // Inform soundPlayer to PLAY only if it isn't already playing (PLAY is running)
+
+			// ~50% chance (without algorithm weight & floating point inaccuracies, at least)
+			if (rand() => 0.5f) {
+				inform soundPlayer PAUSE;
+				wait(5); // Wait 5ms
+				inform soundPlayer RESUME;
+			}
+
+			volume = rand() * 100;
+			inform soundPlayer SET_VOLUME;
+		}
+		inform soundPlayer PAUSE;
+	}
+
+	handle PAUSE {
+		running = false;
+		inform soundPlayer PAUSE;
+	}
+
+	handle RESUME {
+		running = true;
+		run();
+	}
+
+	handle CLEANUP {
+		playSound > => this.thread;
+		delete sfx;
+	}
+}
+
+node playsound [&sfx, &volume] {
+	=>[Thread *parent];
+	<=[];
+
+	sfx.setVolume(volume);
+
+	handle PLAY {
+		sfx.play();
+	}
+
+	handle PAUSE {
+		sfx.pause();
+	}
+
+	// Captures as inputs for handlers
+	handle SET_VOLUME [&volume] {
+		sfx.setVolume(volume);
+	}
+		
+	handle MERGE {
+		sfx.pause();
+		inform parent CLEANUP;
+		return;
+	}
+		
+}
+```
+
+As you can see, this provides an easy way for threads to be forked and merged, as well as a good way for communicating between threads and sharing data between threads (through use of captures).
+
+**NOTE**: `this.thread` also provides a way to use functions as threads. This can be done like so:
+
+```C++
+void main() {
+	// The fork method branches off into a new function declared as a lambda
+
+	Thread *forkedThread = this.thread.fork(void () {
+		// Do code here
+	}); // Starts automatically because no bool given
+		
+	Thread *yetAnotherForkedThread = this.thread.fork(void () {
+		// Do more code here
+	}, false); // Bool means start when initialized
+
+	inform yetAnotherForkedThread START; // It still functions as a node, though a public inner function could be used (Thread::start())
+	wait(5); // Wait 5 ms
+	yetAnotherForkedThread > => this.thread;
+	forkedThread > => this.thread;
+}
+```
 
 ### Modules:
 Modules are a way of grouping your code together to maximize compatibility on different systems. Modules are selected from a
@@ -181,50 +362,6 @@ module gui.icons {
 ```
 
 ### Freezing/Melting:
-Of all of the features added, these are the simplest. Essentially, freezing (`expr ice = {{doLongProcess()}};`) allows
+Of all of the features added, these are the simplest. Essentially, freezing (`expr ice = {{doLongProcess();}};`) allows
 the use of expression variables that store an expression that hasn't been run yet. Melting (`[[ice]];`), or running the frozen
 expression, allows for you to release the previous expression and run it at the correct time.
-
-
-### Soup:
-The final major feature added in Splice is the soup type. The soup type is an optionally-indexed, variable-length, dynamically-
-typed heap, that is used to store large collections of arbitrary data. The soup type can also be extended by "ignores", which
-can be used to limit what types it may or may not hold, and other features that allow for it to take the shape of any data
-container needed with relative ease. The basic format for a soup variable is the following:
-
-`soup <name> = ~[]~;`
-
-The brackets can be used for options and can have data entered to them. Below is an example of an int dictionary with a size
-limit of 20:
-
-`soup intDict20 = ~[ignore {* ? !pair(string, int)}, index {string index, int value}, limit {20}]~;`
-
-Data can be added to a soup like so:
-
-`<someData> ~> <someSoup>;`
-
-For example, when adding to the previously created soup, one would use:
-
-`{'x', 5} ~> intDict20;`
-
-If the soup rejects the data, it can be forwarded like so:
-
-`{'x', 5} ~> intDict20 !~> (soup waste = ~[]~);`
-
-Soups can also be used to buffer. When a space opens, they can get passed on further. Here is an example:
-
-```C#
-soup topPosts = ~[ignore {* ? !Post}, limit {5}]~; // Create a soup of the top 5 posts
-soup posts = ~[ignore {* ? !Post}]~; // Create a buffer of posts
-
-when({{requests => isPost}}, {{$_.post ~> posts >> topPosts}}); // Use when to listen for new posts and add them. >> is buffer.
-```
-
-One final use of soup is as an anonymous object. Here is an example:
-
-```C#
-soup anon = ~[index {obj}]~;
-{'x', 0} ~> anon;
-{'y', 0} ~> anon;
-{'z', 0} ~> anon;
-```
