@@ -22,7 +22,7 @@ An example of this would be the following:
 `int i = 0;`
 
 ### Functions:
-While not widely used in Splice, functions still exist, so as to provide some familiarity for new users. As a user
+While not as widely used in Splice as in other languages, functions still exist, so as to provide some familiarity for new users. As a user
 progresses through the stages of learning Splice, they will begin to use functions less and less. Nevertheless,
 functions are included in the language, and are used as such:
 
@@ -31,7 +31,7 @@ Definition:
 `<return type> <name>(<arguments>[, <arguments]*) { [...] }`
 
 For example:
-```C#
+```C++
 int squareNumber(int num) {
 	return num * num;
 }
@@ -54,7 +54,29 @@ or other related languages, this can be used in other statements. Here are some 
 `int i = squareNumber(10);`
 
 `squareNumber(squareNumber(2));`
-		
+
+Where functions do see a lot of use is as lambdas. The syntax to define an anonymous function is identical to the syntax for defining any other function. For example:
+
+```C++
+void main() {
+	auto squareLambda = int (x) {
+		return x * x;
+	}
+	print(squareLambda(5));
+}
+```
+
+You can also pass these into other functions:
+
+```C++
+void main() {
+	int[] array = {0, 5, 3, 4, 2, 9, 1};
+	map(&array, bool (x) {
+		return x > 5;
+	});
+}
+```
+
 ### Basic Flow-Control Logic Statements:
 Splice features the same basic flow-control logic statements as C, C++, C#, and Java. An example of each will be
 shown in the following, as well as an explanation:
@@ -365,3 +387,5 @@ module gui.icons {
 Of all of the features added, these are the simplest. Essentially, freezing (`expr ice = {{doLongProcess();}};`) allows
 the use of expression variables that store an expression that hasn't been run yet. Melting (`[[ice]];`), or running the frozen
 expression, allows for you to release the previous expression and run it at the correct time.
+
+Freezing and melting can allow you to emulate the C# event handling syntax. (`<object>.<handler> += delegate {doSomething();};`) In Splice this could be done as: `<object>.<handler> += delegate({{doSomething();}});` (or the delegate function call could be entirely omitted). Using a `#define` preprocessor directive this could be made even more similar: `#define delegate` and `<object>.<handler> += delegate {{doSomething();}};`. The event handler system could be 'hacked together' using operator overloading to overload `+=` on the EventHandler class and melting the expression added.
