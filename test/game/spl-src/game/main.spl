@@ -1,0 +1,52 @@
+#!/usr/bin/env splice
+
+import game;
+
+module game {
+	void main() {
+		GameWindow *gameWin = graphics.spawnWindow();
+		GameView *gameView = graphics.initView(gameWin, 1920, 1080, 32, true);
+		
+		World *world = new World(util.generateRandomSeed());
+		
+		node init {
+			=>[];
+			<=[GameWindow *, GameView *, World *];
+			return [gameWin, gameView, world];
+		} => startGame;
+	}
+	
+	node startGame {
+		=>[GameWindow *, GameView *, World *];
+		<=[];
+		
+		bool running = false;
+		Thread *renderThread = this.thread < => render;
+		Thread *updateThread = this.thread < => update;
+		
+		handle ESCAPE_PRESSED {
+		}
+		
+		handle SAVE_GAME {
+		}
+		
+		handle LOAD_GAMES {
+		}
+	}
+	
+	node render [&running] {
+		=>[GameWindow *, GameView *, World *];
+		<=[];
+		
+		while (running) {
+		}
+	}
+	
+	node update [&running] {
+		=>[GameWindow *, GameView *, World *];
+		<=[];
+		
+		this.thread.watch(1000.0/60.0, running, void () {
+		});
+	}
+}
