@@ -10,7 +10,7 @@ namespace Splice.Lexer.Tokens
 	{
 		public override string ToString()
 		{
-			return ";"
+			return ";";
 		}
 	}
 }
